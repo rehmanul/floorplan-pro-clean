@@ -1,0 +1,17 @@
+{
+  "watch": ["server.js", "lib/**/*.js"],
+  "ignore": [
+    "node_modules/**",
+    "uploads/**",
+    "exports/**",
+    "*.log",
+    "*.db",
+    "webhooks.json",
+    "transforms.json",
+    ".local/**",
+    "test/**",
+    "__tests__/**"
+  ],
+  "ext": "js",
+  "delay": "1000"
+}

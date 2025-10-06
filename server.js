@@ -12,7 +12,7 @@ const ExportManager = require('./lib/exportManager');
 const sqliteAdapter = require('./lib/sqliteAdapter');
 const app = express();
 const transformStore = require('./lib/transformStore');
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 
 // Load environment variables
 require('dotenv').config();
