@@ -1,3 +1,13 @@
+modules = ["nodejs-16", "web"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
 [[workflows.workflow]]
 name = "Project"
 mode = "parallel"
@@ -5,14 +15,24 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
+args = "Server"
+
+[[workflows.workflow]]
+name = "Server"
 author = "agent"
 
-[[workflows.workflow]]
-name = "Floor Plan pro clean"
-author = 44644246
-mode = "sequential"
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 3002
 
-[[workflows.workflow]]
-name = "Floor Plan pro clean"
-author = 44685095
-mode = "sequential"
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 3001
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["npm", "start"]
