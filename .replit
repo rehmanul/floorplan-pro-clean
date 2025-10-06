@@ -1,0 +1,18 @@
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+author = "agent"
+
+[[workflows.workflow]]
+name = "Floor Plan pro clean"
+author = 44644246
+mode = "sequential"
+
+[[workflows.workflow]]
+name = "Floor Plan pro clean"
+author = 44685095
+mode = "sequential"
