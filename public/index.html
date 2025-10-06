@@ -20,7 +20,20 @@
             }
 
             // Suppress noisy errors coming from injected content scripts named content.js
-            window.addEventListener('error', function (ev) {
+                // Capture both event-based errors and the older window.onerror to ensure
+                // we catch extension-injected errors that can run before DOMContentLoaded.
+                window.onerror = function (msg, url, lineNo, colNo, error) {
+                    try {
+                        const src = url || (error && error.fileName) || '';
+                        if (src && (src.toLowerCase().includes('content.js') || src.toLowerCase().startsWith('chrome-extension://'))) {
+                            return true; // suppress
+                        }
+                    } catch (e) { /* ignore */ }
+                    // return false to allow default handling otherwise
+                    return false;
+                };
+
+                window.addEventListener('error', function (ev) {
                 try {
                     const src = ev && ev.filename ? ev.filename : (ev && ev.error && ev.error.fileName) || '';
                     if (src && src.toLowerCase().includes('content.js')) {
