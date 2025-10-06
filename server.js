@@ -1325,11 +1325,13 @@ app.post('/api/export/image', async (req, res) => {
 // Serve exported files
 app.use('/exports', express.static('exports'));
 
-const BIND_ADDRESS = process.env.BIND_ADDRESS || '127.0.0.1';
+// Bind address - default to 0.0.0.0 so cloud hosts (Render, Docker) can detect the port
+const BIND_ADDRESS = process.env.BIND_ADDRESS || '0.0.0.0';
 
 try {
     const server = app.listen(PORT, BIND_ADDRESS, () => {
-        console.log(`FloorPlan Pro Clean with APS integration running on http://${BIND_ADDRESS}:${PORT}`);
+        const host = BIND_ADDRESS === '0.0.0.0' ? '0.0.0.0' : BIND_ADDRESS;
+        console.log(`FloorPlan Pro Clean with APS integration running on http://${host}:${PORT}`);
         console.log('✅ Advanced CAD Processing Ready');
         console.log('✅ Intelligent Îlot Placement Ready');
         console.log('✅ Corridor Network Generation Ready');
