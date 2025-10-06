@@ -1,0 +1,19 @@
+# Render service definition for FloorPlan Pro Clean
+services:
+  - type: web
+    name: floorplan-pro-clean
+    env: node
+    plan: free
+    branch: main
+    region: oregon
+    path: /
+    buildCommand: "npm install && npm run vite-build || true"
+    startCommand: "node server.js"
+    pullRequestPreview: true
+    autoDeploy: true
+    instanceType: "starter"
+    envVars:
+      - key: PORT
+        value: "3001"
+      - key: NODE_ENV
+        value: "production"

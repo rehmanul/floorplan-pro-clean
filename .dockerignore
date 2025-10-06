@@ -1,0 +1,13 @@
+node_modules
+test
+test-output
+.git
+public/libs/build
+public/libs/package
+uploads
+exports
+*.log
+*.local
+*.pem
+*.key
+*.env
