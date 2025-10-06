@@ -53,6 +53,11 @@
     <script>
         // Ensure the frontend knows where the API server is (use Render origin by default)
         window.__API_BASE__ = window.__API_BASE__ || window.location.origin || 'https://YOUR_RENDER_URL_HERE';
+        // Allow quick testing by passing ?urn=<base64-or-urn-string> in the URL
+        try {
+            const qp = new URLSearchParams(window.location.search || '');
+            if (qp.has('urn')) window.__AUTO_URN__ = qp.get('urn');
+        } catch (e) { /* ignore */ }
         // Provide a minimal safe content.query stub early to avoid extension-injected content.js from breaking the app
         try {
             if (typeof window.content === 'undefined') {

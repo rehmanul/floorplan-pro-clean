@@ -77,9 +77,10 @@ document.addEventListener('DOMContentLoaded', function () {
             rendererType = 'viewer';
             try {
                 if (!viewerHandle) {
-                    const urn = currentFloorPlan?.urn || '';
+                    // Prefer URN from currentFloorPlan, then auto URN from query param
+                    const urn = currentFloorPlan?.urn || window.__AUTO_URN__ || '';
                     if (!urn) {
-                        showNotification('No document loaded for Autodesk Viewer', 'warning');
+                        showNotification('No document loaded for Autodesk Viewer — upload a CAD file or provide ?urn=<urn>', 'warning');
                         return;
                     }
                     viewerHandle = await loadViewer(viewerContainer, urn, { autoApplyTransform: true });
