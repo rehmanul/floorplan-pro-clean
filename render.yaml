@@ -1,19 +1,16 @@
-# Render service definition for FloorPlan Pro Clean
+# Render service manifest (Docker) for FloorPlan Pro Clean
 services:
   - type: web
     name: floorplan-pro-clean
-    env: node
-    plan: free
+    runtime: docker
     branch: main
     region: oregon
-    path: /
-    buildCommand: "npm install && npm run vite-build || true"
+    plan: free
+    buildCommand: "docker build -t floorplan-pro-clean ."
     startCommand: "node server.js"
-    pullRequestPreview: true
-    autoDeploy: true
-    instanceType: "starter"
     envVars:
       - key: PORT
         value: "3001"
       - key: NODE_ENV
         value: "production"
+
