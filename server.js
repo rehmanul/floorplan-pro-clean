@@ -10,8 +10,8 @@ const ProfessionalIlotPlacer = require('./lib/professionalIlotPlacer');
 const ProfessionalCorridorGenerator = require('./lib/professionalCorridorGenerator');
 const ExportManager = require('./lib/exportManager');
 const sqliteAdapter = require('./lib/sqliteAdapter');
-
 const app = express();
+const transformStore = require('./lib/transformStore');
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 
 // Load environment variables
@@ -65,28 +65,17 @@ const apsProcessor = new RealAPSProcessor(APS_CLIENT_ID, APS_CLIENT_SECRET);
 
 const crypto = require('crypto');
 const os = require('os');
+const { safeNum, safePoint, sanitizeIlot, sanitizeCorridor } = require('./lib/sanitizers');
 
 // Webhook secret for verifying APS callbacks (set APS_WEBHOOK_SECRET in .env)
 const APS_WEBHOOK_SECRET = process.env.APS_WEBHOOK_SECRET || null;
-
-// Webhook storage: switched to SQLite-backed store (lib/webhookStore)
-const webhookStore = require('./lib/webhookStore');
-const transformStore = require('./lib/transformStore');
 
 // MASTER_KEY should be a 32-byte key in HEX or base64 stored in env for encrypting webhook secrets in production.
 const MASTER_KEY = process.env.MASTER_KEY || null;
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY || null;
 
-function _getMasterKeyBuffer() {
-    if (!MASTER_KEY) return null;
-    try {
-        if (/^[0-9a-fA-F]{64}$/.test(MASTER_KEY)) return Buffer.from(MASTER_KEY, 'hex');
-        // try base64
-        return Buffer.from(MASTER_KEY, 'base64');
-    } catch (e) {
-        return null;
-    }
-}
+// Webhook storage: switched to SQLite-backed store (lib/webhookStore)
+const webhookStore = require('./lib/webhookStore');
 
 function encryptSecret(plain) {
     const key = _getMasterKeyBuffer();
@@ -120,6 +109,85 @@ function decryptSecret(token) {
 function isEncryptedToken(s) {
     return typeof s === 'string' && s.split(':').length === 3;
 }
+
+// Normalize CAD geometry to a canonical shape expected by the frontend.
+// Ensures each wall has .start and .end with numeric {x,y} and preserves polygon when present.
+function normalizeCadData(cad) {
+    if (!cad || typeof cad !== 'object') return cad;
+
+    const norm = Object.assign({}, cad);
+
+    // normalize walls
+    if (Array.isArray(cad.walls)) {
+        norm.walls = cad.walls.map(w => {
+            try {
+                const out = Object.assign({}, w);
+                // if already has numeric start/end, use them
+                if (out.start && typeof out.start.x === 'number' && typeof out.start.y === 'number' && out.end && typeof out.end.x === 'number' && typeof out.end.y === 'number') {
+                    return out;
+                }
+
+                // if polygon present, take first two points as start/end
+                if (Array.isArray(out.polygon) && out.polygon.length >= 2) {
+                    const s = out.polygon[0];
+                    const e = out.polygon[1];
+                    if (Array.isArray(s) && typeof s[0] === 'number' && typeof s[1] === 'number' && Array.isArray(e) && typeof e[0] === 'number' && typeof e[1] === 'number') {
+                        out.start = { x: Number(s[0]), y: Number(s[1]) };
+                        out.end = { x: Number(e[0]), y: Number(e[1]) };
+                        return out;
+                    }
+                }
+
+                // if line-like shape with start/end as objects but maybe strings, coerce
+                if (out.start && out.end) {
+                    const sx = Number(out.start.x);
+                    const sy = Number(out.start.y);
+                    const ex = Number(out.end.x);
+                    const ey = Number(out.end.y);
+                    if (Number.isFinite(sx) && Number.isFinite(sy) && Number.isFinite(ex) && Number.isFinite(ey)) {
+                        out.start = { x: sx, y: sy };
+                        out.end = { x: ex, y: ey };
+                        return out;
+                    }
+                }
+
+                // fallback: try to infer from segment fields (startX/startY/endX/endY)
+                if (typeof out.x1 === 'number' && typeof out.y1 === 'number' && typeof out.x2 === 'number' && typeof out.y2 === 'number') {
+                    out.start = { x: Number(out.x1), y: Number(out.y1) };
+                    out.end = { x: Number(out.x2), y: Number(out.y2) };
+                    return out;
+                }
+
+                // give an explicit minimal start/end if nothing else
+                return out;
+            } catch (e) {
+                return w;
+            }
+        }).filter(Boolean);
+    }
+
+    // normalize forbiddenZones and entrances polygons to arrays of [x,y]
+    if (Array.isArray(cad.forbiddenZones)) {
+        norm.forbiddenZones = cad.forbiddenZones.map(z => {
+            if (Array.isArray(z.polygon)) {
+                return Object.assign({}, z, { polygon: z.polygon.map(pt => Array.isArray(pt) ? [Number(pt[0]), Number(pt[1])] : pt).filter(Boolean) });
+            }
+            return z;
+        }).filter(Boolean);
+    }
+
+    if (Array.isArray(cad.entrances)) {
+        norm.entrances = cad.entrances.map(e => {
+            if (Array.isArray(e.polygon)) {
+                return Object.assign({}, e, { polygon: e.polygon.map(pt => Array.isArray(pt) ? [Number(pt[0]), Number(pt[1])] : pt).filter(Boolean) });
+            }
+            return e;
+        }).filter(Boolean);
+    }
+
+    return norm;
+}
+
 
 // If there is an existing webhooks.json (dev store), migrate entries into SQLite on first run
 function migrateJsonStoreToSqlite() {
@@ -503,7 +571,7 @@ app.post('/api/jobs', upload.single('file'), async (req, res) => {
             success: true,
             urn: urn,
             processing: true,
-            cadData: cadData,
+            cadData: normalizeCadData(cadData),
             message: 'File uploaded to APS - translation started. Poll /api/jobs/:urn/status or wait for webhook.'
         });
 
@@ -542,6 +610,8 @@ app.post('/api/analyze', async (req, res) => {
                 totalArea: totalArea,
                 urn: urn
             };
+            // normalize local DXF-derived data before returning
+            analysisData = normalizeCadData(analysisData);
         } else {
             // Use real APS processing for DWG files
             try {
@@ -561,7 +631,7 @@ app.post('/api/analyze', async (req, res) => {
 
         res.json({
             success: true,
-            ...analysisData,
+            ...normalizeCadData(analysisData),
             message: 'Analysis completed successfully'
         });
 
@@ -595,12 +665,14 @@ app.post('/api/ilots', (req, res) => {
         }
 
         const ilotPlacer = new ProfessionalIlotPlacer(floorPlan, options);
-        const ilots = ilotPlacer.generateIlots(distribution, options.totalIlots || 100);
+        const ilotsRaw = ilotPlacer.generateIlots(distribution, options.totalIlots || 100);
+        // sanitize placements to ensure numeric fields for client
+        const ilots = Array.isArray(ilotsRaw) ? ilotsRaw.map(sanitizeIlot).filter(Boolean) : [];
         global.lastPlacedIlots = ilots;
 
         res.json({
             ilots: ilots,
-            totalArea: ilots.reduce((sum, ilot) => sum + ilot.area, 0),
+            totalArea: ilots.reduce((sum, ilot) => sum + (Number(ilot.area) || 0), 0),
             count: ilots.length
         });
 
@@ -918,7 +990,6 @@ app.post('/api/aps/webhook/callback', async (req, res) => {
 // Simulation endpoints removed to enforce processing only from real APS translations and uploaded CAD files.
 
 // Debug endpoint to return last placed ilots/corridors (useful for viewer overlay demo)
-const { sanitizeIlot, sanitizeCorridor } = require('./lib/sanitizers');
 app.get('/api/debug/last-placements', adminAuth, (req, res) => {
     try {
         const rawIlots = Array.isArray(global.lastPlacedIlots) ? global.lastPlacedIlots : [];

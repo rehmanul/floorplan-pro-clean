@@ -11,10 +11,27 @@ export async function loadViewer(container, urn, options = {}) {
         });
     }
 
-    // get token from server
-    const tokenResp = await fetch('/api/viewer/token');
-    if (!tokenResp.ok) throw new Error('Failed to get viewer token');
-    const tokenJson = await tokenResp.json();
+    // get token from server (use absolute API base to avoid requests hitting the static preview server)
+    const API_BASE = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+    let tokenJson = null;
+    try {
+        const tokenResp = await fetch(`${API_BASE}/api/viewer/token`, { mode: 'cors' });
+        if (!tokenResp.ok) {
+            const body = await tokenResp.text().catch(() => null);
+            throw new Error('Viewer token endpoint returned ' + tokenResp.status + (body ? ' - ' + body : ''));
+        }
+        tokenJson = await tokenResp.json();
+    } catch (e) {
+        // fallback to auth/token endpoint if viewer token endpoint is unavailable
+        try {
+            const alt = await fetch(`${API_BASE}/api/auth/token`, { mode: 'cors' });
+            if (!alt.ok) throw new Error('Fallback auth token failed');
+            tokenJson = await alt.json();
+        } catch (e2) {
+            console.error('Failed to obtain viewer token from server:', e.message || e);
+            throw e2 || e;
+        }
+    }
     const auth = {
         getAccessToken: function (onGetAccessToken) {
             onGetAccessToken(tokenJson.access_token, tokenJson.expires_in);
@@ -42,7 +59,8 @@ export async function loadViewer(container, urn, options = {}) {
                 // Try fetching manifest via server proxy first to detect CORS issues early (only when URN looks valid)
                 if (urnArg && urnArg.toLowerCase() !== 'urn:') {
                     try {
-                        const proxyResp = await fetch(`/api/aps/manifest?urn=${encodeURIComponent(urnArg)}`);
+                        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+                        const proxyResp = await fetch(`${API}/api/aps/manifest?urn=${encodeURIComponent(urnArg)}`);
                         if (!proxyResp.ok) {
                             // include response body when possible to aid debugging and abort viewer load
                             const body = await proxyResp.text().catch(() => null);
@@ -75,7 +93,8 @@ export async function loadViewer(container, urn, options = {}) {
 
                         if (options && options.autoApplyTransform && urnArg) {
                             try {
-                                const resp = await fetch(`/api/transforms/${encodeURIComponent(urnArg)}/effective`);
+                                const API2 = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+                                const resp = await fetch(`${API2}/api/transforms/${encodeURIComponent(urnArg)}/effective`);
                                 if (resp.ok) {
                                     const j = await resp.json();
                                     if (j && j.transform) {

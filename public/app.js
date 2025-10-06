@@ -24,9 +24,10 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (e) { /* ignore errors in handler */ }
     });
 
-    // Defensive shim: some browser extensions inject a global `content` object that conflicts with our usage.
-    // Provide a minimal safe `content.query` stub if an unexpected `content` object exists to avoid runtime TypeErrors.
-    try {
+    // Initialize content.query immediately to prevent TypeErrors
+    (function initializeContentQuery() {
+        // Defensive shim: some browser extensions inject a global `content` object that conflicts with our usage.
+        // Provide a minimal safe `content.query` stub if an unexpected `content` object exists to avoid runtime TypeErrors.
         if (typeof window.content === 'undefined') {
             // Some extensions inject code expecting a `content` global. Provide a minimal safe object to avoid crashes.
             Object.defineProperty(window, 'content', {
@@ -44,9 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 value: function () { return null; }
             });
         }
-    } catch (e) {
-        // ignore
-    }
+    })(); // Execute immediately
 
     // Initialize the main container
     const container = document.getElementById('threeContainer');
@@ -59,6 +58,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const useViewerBtn = document.getElementById('useViewerBtn');
     let viewerHandle = null;
     let viewerContainer = document.getElementById('threeContainer');
+    // expose viewerHandle to window so overlay functions can access it reliably
+    Object.defineProperty(window, '__viewerHandle', { configurable: true, enumerable: false, writable: true, value: viewerHandle });
 
     if (useThreeBtn && useViewerBtn) {
         useThreeBtn.addEventListener('click', async () => {
@@ -76,7 +77,12 @@ document.addEventListener('DOMContentLoaded', function () {
             rendererType = 'viewer';
             try {
                 if (!viewerHandle) {
-                    viewerHandle = await loadViewer(viewerContainer, currentFloorPlan?.urn || '', { autoApplyTransform: true });
+                    const urn = currentFloorPlan?.urn || '';
+                    if (!urn) {
+                        showNotification('No document loaded for Autodesk Viewer', 'warning');
+                        return;
+                    }
+                    viewerHandle = await loadViewer(viewerContainer, urn, { autoApplyTransform: true });
                 }
                 // overlay existing ilots/corridors, passing viewer handle for projection
                 overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
@@ -91,7 +97,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (transformDebugBtn) {
             transformDebugBtn.addEventListener('click', async () => {
                 if (!viewerHandle) {
-                    try { viewerHandle = await loadViewer(viewerContainer, currentFloorPlan?.urn || '', { autoApplyTransform: true }); }
+                    const urn = currentFloorPlan?.urn || '';
+                    if (!urn) { showNotification('No document loaded for Viewer', 'warning'); return; }
+                    try { viewerHandle = await loadViewer(viewerContainer, urn, { autoApplyTransform: true }); }
                     catch (e) { showNotification('Viewer not available', 'error'); return; }
                 }
                 try {
@@ -165,6 +173,54 @@ document.addEventListener('DOMContentLoaded', function () {
     const exportImageBtn = document.getElementById('exportImageBtn');
     if (exportImageBtn) exportImageBtn.onclick = exportToImage;
 
+    // Optimization buttons (may be noop if backend doesn't expose these endpoints)
+    const optimizeLayoutBtn = document.getElementById('optimizeLayoutBtn');
+    const optimizePathsBtn = document.getElementById('optimizePathsBtn');
+    if (optimizeLayoutBtn) {
+        optimizeLayoutBtn.addEventListener('click', async () => {
+            if (!generatedIlots.length || !currentFloorPlan) { showNotification('Generate îlots first', 'warning'); return; }
+            showNotification('Applying layout optimization...', 'info');
+            try {
+                const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+                const resp = await fetch(`${API}/api/optimize/layout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ floorPlan: currentFloorPlan, ilots: generatedIlots }) });
+                const j = await resp.json();
+                if (j && Array.isArray(j.ilots)) {
+                    generatedIlots = j.ilots;
+                    document.getElementById('ilotCount').textContent = generatedIlots.length;
+                    if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+                    showNotification('Optimization complete', 'success');
+                } else {
+                    showNotification('No optimization changes returned', 'warning');
+                }
+            } catch (e) {
+                console.error('Optimization layout failed', e);
+                showNotification('Optimization failed', 'error');
+            }
+        });
+    }
+
+    if (optimizePathsBtn) {
+        optimizePathsBtn.addEventListener('click', async () => {
+            if (!generatedIlots.length || !currentFloorPlan) { showNotification('Generate îlots first', 'warning'); return; }
+            showNotification('Optimizing corridors...', 'info');
+            try {
+                const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+                const resp = await fetch(`${API}/api/optimize/paths`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ floorPlan: currentFloorPlan, ilots: generatedIlots }) });
+                const j = await resp.json();
+                if (j && Array.isArray(j.corridors)) {
+                    corridorNetwork = j.corridors;
+                    if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+                    showNotification('Corridor optimization complete', 'success');
+                } else {
+                    showNotification('No corridor optimization returned', 'warning');
+                }
+            } catch (e) {
+                console.error('Optimization paths failed', e);
+                showNotification('Optimization failed', 'error');
+            }
+        });
+    }
+
     // Zoom controls - compatible with OrbitControls implementations that may not expose dollyIn/dollyOut
     window.addEventListener('wheel', (event) => {
         if (!currentRenderer) return;
@@ -207,7 +263,8 @@ async function handleFileUpload(e) {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('http://localhost:3001/api/jobs', {
+        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+        const response = await fetch(`${API}/api/jobs`, {
             method: 'POST',
             body: formData
         });
@@ -254,8 +311,10 @@ async function generateIlots() {
     // Derive ilot count from floor area when possible (approx 1 ilot per 12 m^2)
     let totalIlots = 100;
     try {
-        if (currentFloorPlan && currentFloorPlan.bounds && currentFloorPlan.bounds.width && currentFloorPlan.bounds.height) {
-            const area = currentFloorPlan.bounds.width * currentFloorPlan.bounds.height;
+        if (currentFloorPlan && currentFloorPlan.bounds) {
+            const w = Number(currentFloorPlan.bounds.width) || Math.abs(Number(currentFloorPlan.bounds.maxX || 0) - Number(currentFloorPlan.bounds.minX || 0));
+            const h = Number(currentFloorPlan.bounds.height) || Math.abs(Number(currentFloorPlan.bounds.maxY || 0) - Number(currentFloorPlan.bounds.minY || 0));
+            const area = Math.max(1, Number(w) * Number(h));
             totalIlots = Math.max(6, Math.round(area / 12));
         }
     } catch (e) {
@@ -263,7 +322,8 @@ async function generateIlots() {
     }
 
     try {
-        const response = await fetch('http://localhost:3001/api/ilots', {
+        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+        const response = await fetch(`${API}/api/ilots`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ floorPlan: currentFloorPlan, distribution: parseDistribution(), options: { totalIlots } })
@@ -332,7 +392,8 @@ async function generateCorridors() {
     showNotification('Generating corridors...', 'info');
 
     try {
-        const response = await fetch('http://localhost:3001/api/corridors', {
+        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+        const response = await fetch(`${API}/api/corridors`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -377,7 +438,8 @@ async function exportToPDF() {
     }
     showNotification('Generating PDF...', 'info');
     try {
-        const response = await fetch('http://localhost:3001/api/export/pdf', {
+        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+        const response = await fetch(`${API}/api/export/pdf`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ floorPlan: currentFloorPlan, ilots: generatedIlots, corridors: corridorNetwork })
@@ -387,7 +449,8 @@ async function exportToPDF() {
         if (result && result.filepath) {
             showNotification('PDF exported: ' + result.filename, 'success');
             // Trigger download
-            window.open(`http://localhost:3001/exports/${result.filename}`, '_blank');
+            const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+            window.open(`${API}/exports/${result.filename}`, '_blank');
         } else {
             showNotification('PDF export failed', 'error');
         }
@@ -403,7 +466,8 @@ async function exportToImage() {
     }
     showNotification('Generating Image...', 'info');
     try {
-        const response = await fetch('http://localhost:3001/api/export/image', {
+        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+        const response = await fetch(`${API}/api/export/image`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ floorPlan: currentFloorPlan, ilots: generatedIlots, corridors: corridorNetwork })
@@ -412,7 +476,8 @@ async function exportToImage() {
         const result = await response.json();
         if (result && result.filepath) {
             showNotification('Image exported: ' + result.filename, 'success');
-            window.open(`http://localhost:3001/exports/${result.filename}`, '_blank');
+            const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+            window.open(`${API}/exports/${result.filename}`, '_blank');
         } else {
             showNotification('Image export failed', 'error');
         }
@@ -437,7 +502,8 @@ async function pollForAPSCompletion(urn) {
 
     while (attempts < maxAttempts) {
         try {
-            const analysisResponse = await fetch('http://localhost:3001/api/analyze', {
+            const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+            const analysisResponse = await fetch(`${API}/api/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ urn: urn })

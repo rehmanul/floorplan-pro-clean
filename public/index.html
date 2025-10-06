@@ -6,231 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FloorPlan Pro Clean - Working System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .container {
-            display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            height: 100vh;
-            gap: 10px;
-            padding: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .container.left-collapsed {
-            grid-template-columns: 0px 1fr 300px;
-        }
-
-        .container.right-collapsed {
-            grid-template-columns: 300px 1fr 0px;
-        }
-
-        .container.left-collapsed.right-collapsed {
-            grid-template-columns: 0px 1fr 0px;
-        }
-
-        .panel {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 12px;
-            padding: 20px;
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-
-        .panel.collapsed {
-            width: 0;
-            min-width: 0;
-            padding: 0;
-            margin: 0;
-            opacity: 0;
-            overflow: hidden;
-        }
-
-        .main {
-            position: relative;
-        }
-
-        .toggle-btn {
-            position: absolute;
-            top: 10px;
-            z-index: 100;
-            background: rgba(37, 99, 235, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .toggle-btn:hover {
-            background: rgba(37, 99, 235, 1);
-            transform: scale(1.1);
-        }
-
-        .toggle-left {
-            left: 10px;
-        }
-
-        .toggle-right {
-            right: 10px;
-        }
-
-        h3 {
-            color: #2563eb;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #e5e7eb;
-            padding-bottom: 8px;
-        }
-
-        h4 {
-            color: #374151;
-            margin: 15px 0 8px 0;
-            font-size: 14px;
-        }
-
-        .btn {
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin: 5px 0;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-
-        #threeContainer {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            background: white;
-        }
-
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            color: white;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .notification-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .notification-error {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-
-        .notification-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        .notification-info {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        }
-
-        .list-item {
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin: 8px 0;
-            background: rgba(255, 255, 255, 0.7);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .list-item:hover {
-            background: #f3f4f6;
-            transform: translateX(4px);
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .stat-card {
-            background: rgba(37, 99, 235, 0.1);
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2563eb;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .logo {
-            font-size: 18px;
-            font-weight: 800;
-            color: #2563eb;
-            margin-bottom: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 
 <body>
-    <div class="container">
+    <script>
+        // Ensure the frontend knows where the API server is (use Render origin by default)
+        window.__API_BASE__ = window.__API_BASE__ || window.location.origin || 'https://YOUR_RENDER_URL_HERE';
+        // Provide a minimal safe content.query stub early to avoid extension-injected content.js from breaking the app
+        try {
+            if (typeof window.content === 'undefined') {
+                Object.defineProperty(window, 'content', { configurable: true, enumerable: false, writable: true, value: { query: function () { return null; } } });
+            } else if (typeof window.content.query === 'undefined') {
+                Object.defineProperty(window.content, 'query', { configurable: true, enumerable: false, writable: true, value: function () { return null; } });
+            }
+        } catch (e) { /* ignore */ }
+    </script>
+    <div class="container" role="application" aria-label="FloorPlan Pro application">
         <div class="panel">
             <div class="logo"><i class="fas fa-cube"></i> FloorPlan Pro Clean</div>
 
             <h3><i class="fas fa-tools"></i> CAD Tools</h3>
-            <button class="btn" onclick="document.getElementById('fileInput').click()">
+            <button class="btn" id="uploadBtn" aria-label="Upload CAD file">
                 <i class="fas fa-upload"></i> Upload CAD File
             </button>
-            <input type="file" id="fileInput" accept=".dxf,.dwg" class="hidden" />
+            <input type="file" id="fileInput" accept=".dxf,.dwg" class="hidden" aria-label="CAD file input" />
 
             <h4>Îlot Generation</h4>
-            <button id="generateIlotsBtn" class="btn">
+            <button id="generateIlotsBtn" class="btn" title="Generate ilots" aria-label="Generate ilots">
                 <i class="fas fa-th-large"></i> Generate Îlots
             </button>
             <button id="optimizeLayoutBtn" class="btn">
@@ -254,9 +57,9 @@
             </button>
 
             <h4>Configuration</h4>
-            <label>Corridor Width (m):</label>
-            <input type="range" id="corridorWidthSlider" min="1" max="3" step="0.1" value="1.5"
-                style="width: 100%; margin: 5px 0;">
+            <label for="corridorWidthSlider">Corridor Width (m):</label>
+            <input type="range" id="corridorWidthSlider" class="corridor-slider" min="1" max="3" step="0.1" value="1.5"
+                aria-valuemin="1" aria-valuemax="3" aria-valuenow="1.5">
             <span id="corridorWidthValue">1.5m</span>
 
             <h4>Statistics</h4>
@@ -270,24 +73,23 @@
                     <div class="stat-label">Îlots</div>
                 </div>
             </div>
-            <div style="text-align: center; margin-top: 10px;">
+            <div class="stat-center" role="status" aria-live="polite">
                 <strong>Total Area: <span id="totalArea">0 m²</span></strong>
             </div>
         </div>
 
         <div class="panel main">
-            <button class="toggle-btn toggle-left">
+            <button class="toggle-btn toggle-left" id="leftToggle" title="Toggle left panel">
                 <i class="fas fa-chevron-left" id="leftToggleIcon"></i>
             </button>
-            <button class="toggle-btn toggle-right">
+            <button class="toggle-btn toggle-right" id="rightToggle" title="Toggle right panel">
                 <i class="fas fa-chevron-right" id="rightToggleIcon"></i>
             </button>
-            <div id="threeContainer" style="position:relative;"></div>
-            <div
-                style="position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:800;display:flex;gap:8px;">
-                <button id="useThreeBtn" class="btn" style="padding:8px 12px;">Three.js</button>
-                <button id="useViewerBtn" class="btn" style="padding:8px 12px;">Autodesk Viewer</button>
-                <button id="transformDebugBtn" class="btn" style="padding:8px 12px;">Transform Debug</button>
+            <div id="threeContainer" class="canvas-wrapper" aria-live="polite" aria-label="3D canvas container"></div>
+            <div class="top-controls">
+                <button id="useThreeBtn" class="btn small" aria-pressed="true">Three.js</button>
+                <button id="useViewerBtn" class="btn small" aria-pressed="false">Autodesk Viewer</button>
+                <button id="transformDebugBtn" class="btn small">Transform Debug</button>
             </div>
         </div>
 
@@ -310,11 +112,10 @@
             </div>
         </div>
         <!-- Debug output for APS analysis (hidden by default) -->
-        <pre id="aps-debug"
-            style="position:fixed;left:10px;bottom:80px;right:10px;max-height:200px;overflow:auto;background:rgba(0,0,0,0.7);color:#fff;padding:10px;border-radius:8px;display:none;z-index:9999;font-size:12px;">
-    </pre>
+        <pre id="aps-debug" class="aps-debug" aria-hidden="true"></pre>
     </div>
 
+    <link rel="stylesheet" href="/styles.css">
     <script type="importmap">
         {
             "imports": {
@@ -322,6 +123,16 @@
             }
         }
         </script>
+    <script>
+        // small wiring to keep upload button accessible
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('fileInput');
+            if (uploadBtn && fileInput) {
+                uploadBtn.addEventListener('click', () => fileInput.click());
+            }
+        });
+    </script>
     <script type="module" src="app.js"></script>
 </body>
 

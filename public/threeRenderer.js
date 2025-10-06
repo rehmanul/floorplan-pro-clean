@@ -42,6 +42,15 @@ export class ThreeRenderer {
         this.renderer.domElement.style.display = 'block';
         container.appendChild(this.renderer.domElement);
 
+        // Ensure canvas fills the container robustly using ResizeObserver if available
+        if (typeof ResizeObserver !== 'undefined') {
+            try {
+                this._resizeObserver = new ResizeObserver(() => this.onWindowResize());
+                this._resizeObserver.observe(this.container);
+            } catch (e) { /* ignore */ }
+        } else {
+            // fallback to window resize event already registered
+        }
         // Trigger initial resize logic in case container sizing wasn't ready earlier
         // (some browsers/layouts report 0 during initial construction)
         setTimeout(() => this.onWindowResize(), 50);
@@ -262,53 +271,110 @@ export class ThreeRenderer {
     }
 
     renderFloorPlan(floorPlan, ilots, corridors) {
-        this.clear();
+        // Defensive: if no floorPlan provided, clear scene and return
+        if (!floorPlan) {
+            this.clear();
+            return;
+        }
 
         // Draw walls with enhanced materials
         if (floorPlan.walls) {
             floorPlan.walls.forEach(wall => {
-                const material = this.getMaterial('wall', 0x000000);
-                const points = [
-                    new THREE.Vector3(wall.start.x, 0, wall.start.y),
-                    new THREE.Vector3(wall.end.x, 0, wall.end.y)
-                ];
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
-                line.castShadow = false;
-                line.receiveShadow = false;
-                this.wallsGroup.add(line);
+                try {
+                    // Resolve start/end points from multiple possible source shapes
+                    let s = null;
+                    let e = null;
+
+                    if (wall.start && typeof wall.start.x === 'number' && typeof wall.start.y === 'number') {
+                        s = wall.start;
+                    } else if (wall.polygon && Array.isArray(wall.polygon) && wall.polygon.length >= 2) {
+                        s = { x: wall.polygon[0][0], y: wall.polygon[0][1] };
+                    } else if (wall.type === 'line' && wall.start) {
+                        s = wall.start;
+                    }
+
+                    if (wall.end && typeof wall.end.x === 'number' && typeof wall.end.y === 'number') {
+                        e = wall.end;
+                    } else if (wall.polygon && Array.isArray(wall.polygon) && wall.polygon.length >= 2) {
+                        e = { x: wall.polygon[1][0], y: wall.polygon[1][1] };
+                    } else if (wall.type === 'line' && wall.end) {
+                        e = wall.end;
+                    }
+
+                    if (!s || !e) return; // skip malformed wall entries
+
+                    const material = this.getMaterial('wall', 0x000000);
+                    const points = [
+                        new THREE.Vector3(s.x, 0, s.y),
+                        new THREE.Vector3(e.x, 0, e.y)
+                    ];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, material);
+                    line.castShadow = false;
+                    line.receiveShadow = false;
+                    this.wallsGroup.add(line);
+                } catch (err) {
+                    // Defensive: skip broken wall entry
+                    console.warn('Skipped malformed wall entry during rendering', err && err.message ? err.message : err);
+                }
             });
         }
 
         // Draw forbidden zones with enhanced materials
         if (floorPlan.forbiddenZones) {
             floorPlan.forbiddenZones.forEach(zone => {
-                const material = this.getMaterial('forbidden', 0x0000ff);
-                const points = [
-                    new THREE.Vector3(zone.start.x, 0, zone.start.y),
-                    new THREE.Vector3(zone.end.x, 0, zone.end.y)
-                ];
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
-                line.castShadow = false;
-                line.receiveShadow = false;
-                this.wallsGroup.add(line);
+                try {
+                    let s = null;
+                    let e = null;
+                    if (zone.start && typeof zone.start.x === 'number') s = zone.start;
+                    else if (zone.polygon && Array.isArray(zone.polygon) && zone.polygon.length >= 2) s = { x: zone.polygon[0][0], y: zone.polygon[0][1] };
+
+                    if (zone.end && typeof zone.end.x === 'number') e = zone.end;
+                    else if (zone.polygon && Array.isArray(zone.polygon) && zone.polygon.length >= 2) e = { x: zone.polygon[1][0], y: zone.polygon[1][1] };
+
+                    if (!s || !e) return;
+                    const material = this.getMaterial('forbidden', 0x0000ff);
+                    const points = [
+                        new THREE.Vector3(s.x, 0, s.y),
+                        new THREE.Vector3(e.x, 0, e.y)
+                    ];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, material);
+                    line.castShadow = false;
+                    line.receiveShadow = false;
+                    this.wallsGroup.add(line);
+                } catch (err) {
+                    console.warn('Skipped malformed forbidden zone during rendering', err && err.message ? err.message : err);
+                }
             });
         }
 
         // Draw entrances with enhanced materials
         if (floorPlan.entrances) {
             floorPlan.entrances.forEach(entrance => {
-                const material = this.getMaterial('entrance', 0xff0000);
-                const points = [
-                    new THREE.Vector3(entrance.start.x, 0, entrance.start.y),
-                    new THREE.Vector3(entrance.end.x, 0, entrance.end.y)
-                ];
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(geometry, material);
-                line.castShadow = false;
-                line.receiveShadow = false;
-                this.wallsGroup.add(line);
+                try {
+                    let s = null;
+                    let e = null;
+                    if (entrance.start && typeof entrance.start.x === 'number') s = entrance.start;
+                    else if (entrance.polygon && Array.isArray(entrance.polygon) && entrance.polygon.length >= 2) s = { x: entrance.polygon[0][0], y: entrance.polygon[0][1] };
+
+                    if (entrance.end && typeof entrance.end.x === 'number') e = entrance.end;
+                    else if (entrance.polygon && Array.isArray(entrance.polygon) && entrance.polygon.length >= 2) e = { x: entrance.polygon[1][0], y: entrance.polygon[1][1] };
+
+                    if (!s || !e) return;
+                    const material = this.getMaterial('entrance', 0xff0000);
+                    const points = [
+                        new THREE.Vector3(s.x, 0, s.y),
+                        new THREE.Vector3(e.x, 0, e.y)
+                    ];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, material);
+                    line.castShadow = false;
+                    line.receiveShadow = false;
+                    this.wallsGroup.add(line);
+                } catch (err) {
+                    console.warn('Skipped malformed entrance during rendering', err && err.message ? err.message : err);
+                }
             });
         }
 
@@ -322,6 +388,12 @@ export class ThreeRenderer {
 
         if (ilots) {
             ilots.forEach((ilot, index) => {
+                if (!ilot) return; // skip null/undefined entries
+                // Ensure required numeric properties exist before rendering
+                if (typeof ilot.x !== 'number' || typeof ilot.y !== 'number' || typeof ilot.width !== 'number' || typeof ilot.height !== 'number') {
+                    console.warn('Skipping ilot with missing numeric properties at index', index, ilot);
+                    return;
+                }
                 const color = ilotColors[ilot.type] || 0x10b981;
                 const material = this.getMaterial('ilot', color, 0.8);
 

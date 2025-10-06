@@ -1,0 +1,16 @@
+﻿# Local runtime artifacts
+webhooks.db
+uploads/
+exports/
+logs/
+*.log
+
+# Workspace/test outputs
+analysis_preview.json
+post_floorplan.json
+post_ilots_response.json
+post_preview.json
+workspace_*.json
+
+# Built/served copies
+public/threeRenderer_served.js
