@@ -260,7 +260,7 @@ async function handleFileUpload(e) {
 
     const file = e.target.files[0];
     try {
-        showNotification('Processing CAD file...', 'info');
+        showLoader('Uploading file...');
         const formData = new FormData();
         formData.append('file', file);
 
@@ -294,9 +294,11 @@ async function handleFileUpload(e) {
         document.getElementById('totalArea').textContent = `${currentFloorPlan.totalArea} m²`;
 
         if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+        hideLoader();
         showNotification(`File processed successfully!`, 'success');
 
     } catch (error) {
+        hideLoader();
         showNotification('Upload failed: ' + error.message, 'error');
     }
 }
@@ -500,6 +502,7 @@ function showNotification(message, type) {
 async function pollForAPSCompletion(urn) {
     const maxAttempts = 20;
     let attempts = 0;
+    showLoader('Waiting for APS translation...');
 
     while (attempts < maxAttempts) {
         try {
@@ -512,21 +515,47 @@ async function pollForAPSCompletion(urn) {
 
             if (analysisResponse.status === 202) {
                 const result = await analysisResponse.json();
-                showNotification(`APS Processing: ${result.message}`, 'info');
+                // Update persistent loader message to surface server-side status
+                try { showLoader(`APS Processing: ${result.message || 'working...'}`); } catch (e) { /* ignore */ }
                 await new Promise(resolve => setTimeout(resolve, 10000));
                 attempts++;
             } else if (analysisResponse.ok) {
-                return await analysisResponse.json();
+                const payload = await analysisResponse.json();
+                hideLoader();
+                return payload;
             } else {
+                hideLoader();
                 throw new Error('Analysis failed after processing.');
             }
         } catch (error) {
             attempts++;
             if (attempts >= maxAttempts) {
+                hideLoader();
                 throw new Error('APS processing timeout.');
             }
             await new Promise(resolve => setTimeout(resolve, 10000));
         }
     }
     throw new Error('APS processing failed to complete.');
+}
+
+// Loader helpers
+function showLoader(message) {
+    try {
+        const overlay = document.getElementById('globalLoader');
+        const msg = document.getElementById('loaderMessage');
+        if (!overlay) return;
+        if (msg && message) msg.textContent = message;
+        overlay.classList.remove('hidden');
+        overlay.setAttribute('aria-hidden', 'false');
+    } catch (e) { /* ignore */ }
+}
+
+function hideLoader() {
+    try {
+        const overlay = document.getElementById('globalLoader');
+        if (!overlay) return;
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+    } catch (e) { /* ignore */ }
 }
