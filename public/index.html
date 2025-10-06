@@ -20,20 +20,20 @@
             }
 
             // Suppress noisy errors coming from injected content scripts named content.js
-                // Capture both event-based errors and the older window.onerror to ensure
-                // we catch extension-injected errors that can run before DOMContentLoaded.
-                window.onerror = function (msg, url, lineNo, colNo, error) {
-                    try {
-                        const src = url || (error && error.fileName) || '';
-                        if (src && (src.toLowerCase().includes('content.js') || src.toLowerCase().startsWith('chrome-extension://'))) {
-                            return true; // suppress
-                        }
-                    } catch (e) { /* ignore */ }
-                    // return false to allow default handling otherwise
-                    return false;
-                };
+            // Capture both event-based errors and the older window.onerror to ensure
+            // we catch extension-injected errors that can run before DOMContentLoaded.
+            window.onerror = function (msg, url, lineNo, colNo, error) {
+                try {
+                    const src = url || (error && error.fileName) || '';
+                    if (src && (src.toLowerCase().includes('content.js') || src.toLowerCase().startsWith('chrome-extension://'))) {
+                        return true; // suppress
+                    }
+                } catch (e) { /* ignore */ }
+                // return false to allow default handling otherwise
+                return false;
+            };
 
-                window.addEventListener('error', function (ev) {
+            window.addEventListener('error', function (ev) {
                 try {
                     const src = ev && ev.filename ? ev.filename : (ev && ev.error && ev.error.fileName) || '';
                     if (src && src.toLowerCase().includes('content.js')) {
@@ -43,6 +43,36 @@
                     }
                 } catch (e) { /* ignore */ }
             }, true);
+
+            // Wrap console methods to filter noisy extension messages (non-destructive)
+            try {
+                const FILTER_PATTERNS = [/content\.js/i, /Extension context invalidated/i, /^chrome-extension:\/\//i];
+                function shouldFilter(args) {
+                    try {
+                        const text = args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+                        return FILTER_PATTERNS.some(p => p.test(text));
+                    } catch (e) { return false; }
+                }
+                ['log', 'warn', 'error', 'info', 'debug'].forEach((m) => {
+                    const orig = console[m] && console[m].bind(console);
+                    if (!orig) return;
+                    console[m] = function (...args) {
+                        if (shouldFilter(args)) return; // drop noisy messages
+                        orig(...args);
+                    };
+                });
+
+                // Suppress frequent unhandledRejection spam from extensions
+                window.addEventListener('unhandledrejection', (ev) => {
+                    try {
+                        const reason = ev && ev.reason ? (typeof ev.reason === 'string' ? ev.reason : JSON.stringify(ev.reason)) : '';
+                        if (FILTER_PATTERNS.some(p => p.test(reason))) {
+                            ev.preventDefault && ev.preventDefault();
+                            return true;
+                        }
+                    } catch (e) { /* ignore */ }
+                });
+            } catch (e) { /* ignore console wrapper errors */ }
         } catch (e) { /* ignore any errors in the stub */ }
     </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
