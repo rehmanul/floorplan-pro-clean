@@ -1,0 +1,17 @@
+# Minimal production files to include when creating a deployment artifact
+
+server.js
+package.json
+package-lock.json (if present)
+Dockerfile
+render.yaml (optional - used by Render)
+public/ (static frontend assets)
+lib/ (required server-side modules)
+uploads/ (runtime directory)
+exports/ (runtime directory)
+.env.production (optional - keep secrets out of repo)
+
+# Exclude these from production artifact to keep it small:
+- node_modules (install on build)
+- .git
+- tests, .github, docs

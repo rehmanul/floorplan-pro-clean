@@ -1,0 +1,10 @@
+Migrated 1 hooks from webhooks.json into SQLite store.
+FloorPlan Pro Clean with APS integration running on http://localhost:3001
+✅ Advanced CAD Processing Ready
+✅ Intelligent Îlot Placement Ready
+✅ Corridor Network Generation Ready
+✅ PDF/Image Export Ready
+✅ Autodesk APS Integration Ready
+Make sure to set APS_CLIENT_ID and APS_CLIENT_SECRET environment variables
+Simulating APS webhook for dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6Ynpja29meW52ZTJ3NHJwem55bW9vY3VxeGt3ZWwvMTc1OTU2NDM2NDQyNC1yZXNpZGVudGlhbCUyMGZsb29yJTIwcGxhbiUyMGZvciUyMHRlc3QuZHhm
+runAutomationForUrn called for urn=dXJuOmFkc2sub2JqZWN0czpvcy5vYmplY3Q6Ynpja29meW52ZTJ3NHJwem55bW9vY3VxeGt3ZWwvMTc1OTU2NDM2NDQyNC1yZXNpZGVudGlhbCUyMGZsb29yJTIwcGxhbiUyMGZvciUyMHRlc3QuZHhm providedAnalysisPresent=true waitForAPS=false

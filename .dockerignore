@@ -1,4 +1,14 @@
 node_modules
+uploads
+exports
+logs
+.git
+.github
+*.log
+dist
+build
+public/libs/package/
+node_modules
 test
 test-output
 .git

@@ -1,0 +1,17 @@
+{
+  "hooks": [
+    {
+      "id": "https://developer.api.autodesk.com/webhooks/v1/systems/derivative/events/extraction.finished/hooks/3638bf29-208b-4467-841a-78cf3f27d0a8",
+      "system": "derivative",
+      "event": "extraction.finished",
+      "callbackUrl": "http://127.0.0.1:3001/api/aps/webhook/callback",
+      "scope": {
+        "workflow": "test-workflow-001"
+      },
+      "secret": "6f8431309ffd8b00abdae109:6f8e190e1d592b939ff2f29b52a35a68:db5c23fb327d74b03c3a73e2a96da0bd1e4c5fb82a6140f71efe1e7d93228b891c28970aed3c723ac51507d61896c12c8f75a9336a787e3c1cb7343dfb13e305",
+      "location": "https://developer.api.autodesk.com/webhooks/v1/systems/derivative/events/extraction.finished/hooks/3638bf29-208b-4467-841a-78cf3f27d0a8",
+      "createdAt": "2025-10-04T10:03:30.565Z"
+    }
+  ],
+  "processed": []
+}

@@ -74,9 +74,9 @@ To deploy using Docker on Render:
 3. Render will build the image using the included `Dockerfile` and run `node server.js`.
 
 Notes:
+
 - The app binds to 127.0.0.1 by default for local-only operation. On Render,you should set `BIND_ADDRESS` env var to `0.0.0.0` or adjust startup if necessary. Example: `BIND_ADDRESS=0.0.0.0`.
 - For APS webhooks, Render services are publicly reachable and can receive webhook callbacks directly. Use a strong `APS_WEBHOOK_SECRET` and verify signatures.
-
 
 # FloorPlan Pro Clean
 

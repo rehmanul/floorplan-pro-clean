@@ -8,7 +8,7 @@ Usage:
 #>
 
 param(
-    [Parameter(Mandatory=$true)] [string] $Name,
+    [Parameter(Mandatory = $true)] [string] $Name,
     [switch] $Private,
     [string] $RemoteOrigin
 )
