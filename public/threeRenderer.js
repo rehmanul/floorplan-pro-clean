@@ -25,16 +25,55 @@ export class ThreeRenderer {
         this.camera.position.set(0, 1500, 0);
         this.camera.lookAt(0, 0, 0);
 
-        // Enhanced renderer with better settings
-        this.renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            preserveDrawingBuffer: true,
-            powerPreference: "high-performance"
-        });
+        // Enhanced renderer with better settings and WebGL fallback
+        try {
+            // Test if WebGL is available before creating renderer
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            
+            if (!gl) {
+                throw new Error('WebGL not supported');
+            }
+            
+            this.renderer = new THREE.WebGLRenderer({
+                antialias: true,
+                preserveDrawingBuffer: true,
+                powerPreference: "default",
+                failIfMajorPerformanceCaveat: false,
+                alpha: false
+            });
+            this.useWebGL = true;
+            console.log('Using WebGL renderer');
+        } catch (error) {
+            console.warn('WebGL not available, creating basic 2D visualization fallback');
+            // Create a simple 2D canvas fallback for visualization
+            const canvas2d = document.createElement('canvas');
+            canvas2d.width = this.width;
+            canvas2d.height = this.height;
+            canvas2d.style.width = '100%';
+            canvas2d.style.height = '100%';
+            canvas2d.style.display = 'block';
+            canvas2d.style.background = '#f0f0f0';
+            container.appendChild(canvas2d);
+            
+            this.canvas2d = canvas2d;
+            this.ctx2d = canvas2d.getContext('2d');
+            this.useWebGL = false;
+            this.use2DFallback = true;
+            
+            // Skip the rest of Three.js initialization
+            console.log('2D Canvas fallback active');
+            return;
+        }
+        
         this.renderer.setSize(this.width, this.height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        
+        if (this.useWebGL) {
+            this.renderer.shadowMap.enabled = true;
+            this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        }
+        
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         // Ensure canvas fills the container and remains responsive
         this.renderer.domElement.style.width = '100%';
@@ -274,6 +313,12 @@ export class ThreeRenderer {
         // Defensive: if no floorPlan provided, clear scene and return
         if (!floorPlan) {
             this.clear();
+            return;
+        }
+
+        // 2D Canvas fallback rendering
+        if (this.use2DFallback && this.ctx2d) {
+            this.render2DFloorPlan(floorPlan, ilots, corridors);
             return;
         }
 
@@ -570,7 +615,137 @@ export class ThreeRenderer {
         }
     }
 
+    render2DFloorPlan(floorPlan, ilots, corridors) {
+        const ctx = this.ctx2d;
+        const canvas = this.canvas2d;
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate scale and offset to fit floor plan
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        
+        if (floorPlan.walls) {
+            floorPlan.walls.forEach(wall => {
+                if (wall.start) {
+                    minX = Math.min(minX, wall.start.x);
+                    maxX = Math.max(maxX, wall.start.x);
+                    minY = Math.min(minY, wall.start.y);
+                    maxY = Math.max(maxY, wall.start.y);
+                }
+                if (wall.end) {
+                    minX = Math.min(minX, wall.end.x);
+                    maxX = Math.max(maxX, wall.end.x);
+                    minY = Math.min(minY, wall.end.y);
+                    maxY = Math.max(maxY, wall.end.y);
+                }
+            });
+        }
+        
+        const width = maxX - minX || 100;
+        const height = maxY - minY || 100;
+        const scale = Math.min(canvas.width / width, canvas.height / height) * 0.9;
+        const offsetX = (canvas.width - width * scale) / 2 - minX * scale;
+        const offsetY = (canvas.height - height * scale) / 2 - minY * scale;
+        
+        // Helper to transform coordinates
+        const tx = (x) => x * scale + offsetX;
+        const ty = (y) => canvas.height - (y * scale + offsetY); // Flip Y axis
+        
+        // Draw walls
+        if (floorPlan.walls) {
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            floorPlan.walls.forEach(wall => {
+                if (wall.start && wall.end) {
+                    ctx.moveTo(tx(wall.start.x), ty(wall.start.y));
+                    ctx.lineTo(tx(wall.end.x), ty(wall.end.y));
+                }
+            });
+            ctx.stroke();
+        }
+        
+        // Draw forbidden zones (blue)
+        if (floorPlan.forbiddenZones) {
+            ctx.strokeStyle = '#0000ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            floorPlan.forbiddenZones.forEach(zone => {
+                if (zone.start && zone.end) {
+                    ctx.moveTo(tx(zone.start.x), ty(zone.start.y));
+                    ctx.lineTo(tx(zone.end.x), ty(zone.end.y));
+                }
+            });
+            ctx.stroke();
+        }
+        
+        // Draw entrances (red)
+        if (floorPlan.entrances) {
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            floorPlan.entrances.forEach(entrance => {
+                if (entrance.start && entrance.end) {
+                    ctx.moveTo(tx(entrance.start.x), ty(entrance.start.y));
+                    ctx.lineTo(tx(entrance.end.x), ty(entrance.end.y));
+                }
+            });
+            ctx.stroke();
+        }
+        
+        // Draw ilots (green boxes)
+        if (ilots && ilots.length > 0) {
+            ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
+            ctx.strokeStyle = '#008800';
+            ctx.lineWidth = 1;
+            ilots.forEach(ilot => {
+                if (ilot.polygon && ilot.polygon.length >= 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(tx(ilot.polygon[0][0]), ty(ilot.polygon[0][1]));
+                    for (let i = 1; i < ilot.polygon.length; i++) {
+                        ctx.lineTo(tx(ilot.polygon[i][0]), ty(ilot.polygon[i][1]));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        // Draw corridors (gray)
+        if (corridors && corridors.length > 0) {
+            ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 1;
+            corridors.forEach(corridor => {
+                if (corridor.polygon && corridor.polygon.length >= 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(tx(corridor.polygon[0][0]), ty(corridor.polygon[0][1]));
+                    for (let i = 1; i < corridor.polygon.length; i++) {
+                        ctx.lineTo(tx(corridor.polygon[i][0]), ty(corridor.polygon[i][1]));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        // Add label
+        ctx.fillStyle = '#333';
+        ctx.font = '14px Arial';
+        ctx.fillText('2D Canvas Fallback Mode', 10, 20);
+    }
+
     animate() {
+        // Skip animation loop if using 2D fallback
+        if (this.use2DFallback) {
+            return;
+        }
+        
         try {
             requestAnimationFrame(() => this.animate());
 
