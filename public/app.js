@@ -280,13 +280,14 @@ async function handleFileUpload(e) {
         }
 
         currentFloorPlan = {
+            urn: result.urn, // Store the URN for Autodesk Viewer
             walls: analysisData.walls || [],
             forbiddenZones: analysisData.forbiddenZones || [],
             entrances: analysisData.entrances || [],
             bounds: analysisData.bounds,
             totalArea: analysisData.totalArea || 0,
-            rooms: analysisData.rooms || []
-            , placementTransform: analysisData.placementTransform || null
+            rooms: analysisData.rooms || [],
+            placementTransform: analysisData.placementTransform || null
         };
 
         // Update UI statistics
