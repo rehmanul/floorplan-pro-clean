@@ -645,30 +645,41 @@ app.post('/api/analyze', async (req, res) => {
 app.post('/api/ilots', (req, res) => {
     try {
         const { floorPlan, distribution = {
-            '0-1': 10,
-            '1-3': 25,
-            '3-5': 30,
-            '5-10': 35
+            '1-3': 0.25,
+            '3-5': 0.35,
+            '5-10': 0.40
         }, options = {} } = req.body;
 
-        if (!floorPlan || !floorPlan.rooms) {
+        if (!floorPlan) {
             return res.status(400).json({ error: 'Floor plan data required' });
         }
 
-        // Ensure deterministic seed when not provided: derive from URN or bounds
+        // Ensure required arrays exist (even if empty)
+        const normalizedFloorPlan = {
+            walls: floorPlan.walls || [],
+            forbiddenZones: floorPlan.forbiddenZones || [],
+            entrances: floorPlan.entrances || [],
+            bounds: floorPlan.bounds || { minX: 0, minY: 0, maxX: 100, maxY: 100 },
+            rooms: floorPlan.rooms || [],
+            urn: floorPlan.urn
+        };
+
+        // Ensure deterministic seed when not provided
         if (typeof options.seed === 'undefined' || options.seed === null) {
-            const seedSource = floorPlan?.urn || `${floorPlan?.bounds?.minX || 0},${floorPlan?.bounds?.minY || 0},${floorPlan?.bounds?.maxX || 0},${floorPlan?.bounds?.maxY || 0}`;
-            // djb2 hash
+            const seedSource = normalizedFloorPlan.urn || `${normalizedFloorPlan.bounds.minX},${normalizedFloorPlan.bounds.minY},${normalizedFloorPlan.bounds.maxX},${normalizedFloorPlan.bounds.maxY}`;
             let h = 5381;
             for (let i = 0; i < seedSource.length; i++) { h = ((h << 5) + h) + seedSource.charCodeAt(i); }
             options.seed = Math.abs(h) % 1000000000;
         }
 
-        const ilotPlacer = new ProfessionalIlotPlacer(floorPlan, options);
-        const ilotsRaw = ilotPlacer.generateIlots(distribution, options.totalIlots || 100);
+        const ilotPlacer = new ProfessionalIlotPlacer(normalizedFloorPlan, options);
+        const ilotsRaw = ilotPlacer.generateIlots(distribution, options.totalIlots || 50);
+        
         // sanitize placements to ensure numeric fields for client
         const ilots = Array.isArray(ilotsRaw) ? ilotsRaw.map(sanitizeIlot).filter(Boolean) : [];
         global.lastPlacedIlots = ilots;
+
+        console.log(`Îlot generation: ${ilots.length} placed, total area: ${ilots.reduce((sum, ilot) => sum + (Number(ilot.area) || 0), 0).toFixed(2)} m²`);
 
         res.json({
             ilots: ilots,

@@ -304,76 +304,117 @@ async function handleFileUpload(e) {
     }
 }
 
+function updateStats() {
+    document.getElementById('roomCount').textContent = currentFloorPlan.rooms.length;
+    document.getElementById('totalArea').textContent = `${currentFloorPlan.totalArea} m²`;
+    document.getElementById('ilotCount').textContent = generatedIlots.length;
+    const ilotsList = document.getElementById('ilotsList');
+    ilotsList.innerHTML = '';
+    if (generatedIlots.length === 0) {
+        ilotsList.innerHTML = '<div class="list-item">No îlots generated yet</div>';
+    } else {
+        generatedIlots.forEach((ilot, index) => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.textContent = `Îlot ${index + 1} - Capacity: ${ilot.capacity || 'N/A'}`;
+            ilotsList.appendChild(item);
+        });
+    }
+
+    const corridorList = document.getElementById('corridorList');
+    corridorList.innerHTML = '';
+    if (corridorNetwork.length === 0) {
+        corridorList.innerHTML = '<div class="list-item">No corridors generated yet</div>';
+    } else {
+        corridorNetwork.forEach((corridor, index) => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.textContent = `Corridor ${index + 1} - Type: ${corridor.type || 'Standard'}`;
+            corridorList.appendChild(item);
+        });
+    }
+}
+
+function renderCurrentState() {
+    if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+    if (rendererType === 'viewer' && typeof overlayShapes === 'function' && typeof viewerHandle !== 'undefined' && viewerHandle) {
+        overlayShapes(document.getElementById('threeContainer'), generatedIlots, corridorNetwork, viewerHandle);
+    }
+}
+
+
 async function generateIlots() {
     if (!currentFloorPlan) {
         showNotification('Please upload a CAD file first', 'warning');
         return;
     }
 
-    showNotification('Generating îlots...', 'info');
+    // Generate Îlots button handler
+    if (generateIlotsBtn) {
+        generateIlotsBtn.addEventListener('click', async () => {
+            if (!currentFloorPlan) {
+                showNotification('Please upload a CAD file first', 'warning');
+                return;
+            }
 
-    // Derive ilot count from floor area when possible (approx 1 ilot per 12 m^2)
-    let totalIlots = 100;
-    try {
-        if (currentFloorPlan && currentFloorPlan.bounds) {
-            const w = Number(currentFloorPlan.bounds.width) || Math.abs(Number(currentFloorPlan.bounds.maxX || 0) - Number(currentFloorPlan.bounds.minX || 0));
-            const h = Number(currentFloorPlan.bounds.height) || Math.abs(Number(currentFloorPlan.bounds.maxY || 0) - Number(currentFloorPlan.bounds.minY || 0));
-            const area = Math.max(1, Number(w) * Number(h));
-            totalIlots = Math.max(6, Math.round(area / 12));
-        }
-    } catch (e) {
-        console.warn('Error computing ilot count from bounds, using default 100', e);
-    }
+            try {
+                showLoader('Generating îlots...');
 
-    try {
-        const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
-        const response = await fetch(`${API}/api/ilots`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ floorPlan: currentFloorPlan, distribution: parseDistribution(), options: { totalIlots } })
+                // Ensure floorPlan has required arrays (even if empty)
+                const floorPlan = {
+                    ...currentFloorPlan,
+                    walls: currentFloorPlan.walls || [],
+                    forbiddenZones: currentFloorPlan.forbiddenZones || [],
+                    entrances: currentFloorPlan.entrances || [],
+                    bounds: currentFloorPlan.bounds || { minX: 0, minY: 0, maxX: 100, maxY: 100 }
+                };
+
+                const distribution = {
+                    '1-3': 0.25,
+                    '3-5': 0.35,
+                    '5-10': 0.40
+                };
+
+                const response = await fetch('/api/ilots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        floorPlan: floorPlan,
+                        distribution: distribution,
+                        options: { 
+                            totalIlots: 50,
+                            seed: Date.now(),
+                            minEntranceDistance: 1.0,
+                            minIlotDistance: 0.5,
+                            maxAttemptsPerIlot: 800
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate ilots');
+                }
+
+                const data = await response.json();
+                generatedIlots = data.ilots || [];
+
+                console.log(`Generated ${generatedIlots.length} ilots with total area: ${data.totalArea?.toFixed(2) || 0} m²`);
+
+                updateStats();
+                renderCurrentState();
+
+                showNotification(`Generated ${generatedIlots.length} îlots`, 'success');
+                hideLoader();
+            } catch (error) {
+                console.error('Îlot generation error:', error);
+                showNotification(`Failed to generate îlots: ${error.message}`, 'error');
+                hideLoader();
+            }
         });
-
-        const result = await response.json();
-        generatedIlots = result.ilots || [];
-        document.getElementById('ilotCount').textContent = generatedIlots.length;
-
-        // Update right sidebar list
-        const ilotsList = document.getElementById('ilotsList');
-        ilotsList.innerHTML = '';
-        if (generatedIlots.length === 0) {
-            ilotsList.innerHTML = '<div class="list-item">No îlots generated yet</div>';
-        } else {
-            generatedIlots.forEach((ilot, index) => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.textContent = `Îlot ${index + 1} - Capacity: ${ilot.capacity || 'N/A'}`;
-                ilotsList.appendChild(item);
-            });
-        }
-
-        // Warn if ilots missing coordinates and surface raw APS analysis to #aps-debug if present
-        const missingCoords = generatedIlots.filter(p => !p || typeof p.x !== 'number' || typeof p.y !== 'number');
-        if (missingCoords.length) {
-            console.warn('Received ilots with missing coordinates; count=', missingCoords.length);
-            const debugEl = document.getElementById('aps-debug');
-            if (debugEl && currentFloorPlan) debugEl.textContent = JSON.stringify(currentFloorPlan, null, 2);
-        }
-
-        if (currentRenderer) {
-            currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
-            currentRenderer.updateMeasurements && currentRenderer.updateMeasurements();
-        }
-        // If viewer is active, update viewer overlay too
-        if (rendererType === 'viewer' && typeof overlayShapes === 'function' && typeof viewerHandle !== 'undefined' && viewerHandle) {
-            overlayShapes(document.getElementById('threeContainer'), generatedIlots, corridorNetwork, viewerHandle);
-        }
-        showNotification(`Generated ${generatedIlots.length} îlots successfully!`, 'success');
-
-    } catch (error) {
-        console.error('Îlot generation error:', error);
-        showNotification('Îlot generation failed', 'error');
     }
 }
+
 
 function parseDistribution() {
     const txt = document.getElementById('distributionEditor')?.value;
@@ -410,24 +451,9 @@ async function generateCorridors() {
         const result = await response.json();
         corridorNetwork = result.corridors || [];
 
-        // Update right sidebar list
-        const corridorList = document.getElementById('corridorList');
-        corridorList.innerHTML = '';
-        if (corridorNetwork.length === 0) {
-            corridorList.innerHTML = '<div class="list-item">No corridors generated yet</div>';
-        } else {
-            corridorNetwork.forEach((corridor, index) => {
-                const item = document.createElement('div');
-                item.className = 'list-item';
-                item.textContent = `Corridor ${index + 1} - Type: ${corridor.type || 'Standard'}`;
-                corridorList.appendChild(item);
-            });
-        }
+        updateStats();
+        renderCurrentState();
 
-        if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
-        if (rendererType === 'viewer' && typeof overlayShapes === 'function' && typeof viewerHandle !== 'undefined' && viewerHandle) {
-            overlayShapes(document.getElementById('threeContainer'), generatedIlots, corridorNetwork, viewerHandle);
-        }
         showNotification(`Generated ${corridorNetwork.length} corridors successfully!`, 'success');
 
     } catch (error) {

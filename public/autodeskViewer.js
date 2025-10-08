@@ -11,26 +11,27 @@ export async function loadViewer(container, urn, options = {}) {
         });
     }
 
-    // get token from server (use absolute API base to avoid requests hitting the static preview server)
-    const API_BASE = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+    // get token from server
+    const API_BASE = window.location.origin;
     let tokenJson = null;
     try {
-        const tokenResp = await fetch(`${API_BASE}/api/viewer/token`, { mode: 'cors' });
+        const tokenResp = await fetch(`${API_BASE}/api/viewer/token`);
         if (!tokenResp.ok) {
             const body = await tokenResp.text().catch(() => null);
-            throw new Error('Viewer token endpoint returned ' + tokenResp.status + (body ? ' - ' + body : ''));
+            const errorMsg = `Viewer token endpoint returned ${tokenResp.status}${body ? ' - ' + body : ''}`;
+            console.error(errorMsg);
+            throw new Error(errorMsg);
         }
         tokenJson = await tokenResp.json();
-    } catch (e) {
-        // fallback to auth/token endpoint if viewer token endpoint is unavailable
-        try {
-            const alt = await fetch(`${API_BASE}/api/auth/token`, { mode: 'cors' });
-            if (!alt.ok) throw new Error('Fallback auth token failed');
-            tokenJson = await alt.json();
-        } catch (e2) {
-            console.error('Failed to obtain viewer token from server:', e.message || e);
-            throw e2 || e;
+        
+        if (!tokenJson || !tokenJson.access_token) {
+            throw new Error('Invalid token response - missing access_token');
         }
+        
+        console.log('Viewer token obtained successfully, expires in:', tokenJson.expires_in, 'seconds');
+    } catch (e) {
+        console.error('Failed to obtain viewer token:', e);
+        throw new Error('Failed to get Autodesk Viewer token. Please check APS credentials in .env file.');
     }
     const auth = {
         getAccessToken: function (onGetAccessToken) {
