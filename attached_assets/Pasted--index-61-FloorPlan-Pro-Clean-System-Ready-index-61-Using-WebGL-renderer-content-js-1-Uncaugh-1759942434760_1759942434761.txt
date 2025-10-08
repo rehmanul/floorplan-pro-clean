@@ -1,0 +1,64 @@
+(index):61 FloorPlan Pro Clean - System Ready
+(index):61 Using WebGL renderer
+content.js:1 Uncaught TypeError: Cannot read properties of undefined (reading 'query')
+    at content.js:1:13
+(index):61 Polling attempt 1/30, status: inprogress
+(index):61 Polling attempt 2/30, status: inprogress
+(index):61 Polling attempt 3/30, status: inprogress
+(index):61 Polling attempt 4/30, status: success
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+(index):61 Generated 51 ilots with total area: 0.00 m²
+(index):61 Generated 51 ilots with total area: 0.00 m²
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+(index):61 Generated 51 ilots with total area: 0.00 m²
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+m @ content.js:10

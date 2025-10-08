@@ -1,0 +1,393 @@
+(index):61 FloorPlan Pro Clean - System Ready
+(index):61 Using WebGL renderer
+content.js:1 Uncaught TypeError: Cannot read properties of undefined (reading 'query')
+    at content.js:1:13
+(index):61 Polling attempt 1/30, status: inprogress
+(index):61 Polling attempt 2/30, status: inprogress
+(index):61 Polling attempt 3/30, status: inprogress
+(index):61 Polling attempt 4/30, status: success
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+(index):61 Generated 51 ilots with total area: 0.00 m²
+(index):61 Generated 51 ilots with total area: 0.00 m²
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+(index):61 Generated 51 ilots with total area: 0.00 m²
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+m @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+(index):61 Viewer token obtained successfully, expires in: 3076 seconds
+(index):61 getCdnRedirectUrl is deprecated and will be removed soon
+console.<computed> @ (index):61
+(anonymous) @ endpoints.js:236
+ra @ envinit.js:640
+sa @ envinit.js:759
+(anonymous) @ autodeskViewer.js:45
+loadViewer @ autodeskViewer.js:44
+await in loadViewer
+(anonymous) @ app.js:86
+(index):61 THREE.WebGLRenderer 71
+(index):61 WebGL Renderer: ANGLE (Intel, Intel(R) UHD Graphics (0x00009B41) Direct3D11 vs_5_0 ps_5_0, D3D11)
+(index):61 WebGL Vendor: Google Inc. (Intel)
+(index):61 Total geometry size: 0.27991294860839844 MB
+(index):61 Number of meshes: 1
+(index):61 Num Meshes on GPU: 1
+(index):61 Net GPU geom memory used: 292916
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+selectionchange
+(anonymous) @ CommonWidgets.js:89
+(anonymous) @ SettingsPanel.js:482
+(anonymous) @ SettingsPanel.js:524
+(anonymous) @ ViewerSettingsPanel.js:324
+t @ ViewerSettingsPanel.js:528
+(anonymous) @ ViewerSettingsPanel.js:514
+kU @ ViewerSettingsPanel.js:124
+(anonymous) @ GuiViewer3D.js:889
+(anonymous) @ GuiViewer3D.js:902
+(anonymous) @ GuiViewer3D.js:380
+(anonymous) @ GuiViewer3D.js:247
+(anonymous) @ GuiViewer3D.js:308
+setTimeout
+(anonymous) @ GuiViewer3D.js:303
+(anonymous) @ Viewer3D.js:1502
+(anonymous) @ F2DLoader.js:347
+(index):1 Autofocus processing was blocked because a document already has a focused element.
+requests.js:1  POST https://api-js.mixpanel.com/track/?verbose=1&ip=1&_=1759942473098 net::ERR_BLOCKED_BY_CLIENT
+s.XMLHttpRequest.send @ requests.js:1
+XMLHttpRequest.send @ traffic.js:1
+(anonymous) @ mixpanel.module.js:20803
+(anonymous) @ mixpanel.module.js:20897
+(anonymous) @ mixpanel.module.js:16772
+(anonymous) @ mixpanel.module.js:16771
+(anonymous) @ mixpanel.module.js:16967
+Promise.then
+(anonymous) @ mixpanel.module.js:16801
+(anonymous) @ mixpanel.module.js:16760
+setTimeout
+(anonymous) @ mixpanel.module.js:16758
+(anonymous) @ mixpanel.module.js:16749
+(anonymous) @ mixpanel.module.js:16848
+Promise.then
+(anonymous) @ mixpanel.module.js:16801
+(anonymous) @ mixpanel.module.js:16717
+(anonymous) @ mixpanel.module.js:20929
+(anonymous) @ mixpanel.module.js:14128
+(anonymous) @ mixpanel.module.js:20928
+(anonymous) @ mixpanel.module.js:20920
+(anonymous) @ mixpanel.module.js:20349
+rd @ mixpanel.module.js:20223
+(anonymous) @ mixpanel.module.js:22303
+init @ mixpanel.js:20
+init @ ViewerAnalytics.js:79
+registerProvider @ ViewerAnalytics.js:55
+(anonymous) @ index.js:19
+(anonymous) @ MixpanelProvider.min.js:17
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+requests.js:1  POST https://api-js.mixpanel.com/track/?verbose=1&ip=1&_=1759942503113 net::ERR_BLOCKED_BY_CLIENT
+s.XMLHttpRequest.send @ requests.js:1
+XMLHttpRequest.send @ traffic.js:1
+(anonymous) @ mixpanel.module.js:20803
+(anonymous) @ mixpanel.module.js:20897
+(anonymous) @ mixpanel.module.js:16772
+(anonymous) @ mixpanel.module.js:16771
+(anonymous) @ mixpanel.module.js:16967
+Promise.then
+(anonymous) @ mixpanel.module.js:16801
+(anonymous) @ mixpanel.module.js:16760
+setTimeout
+(anonymous) @ mixpanel.module.js:16758
+(anonymous) @ mixpanel.module.js:16749
+(anonymous) @ mixpanel.module.js:16848
+Promise.then
+(anonymous) @ mixpanel.module.js:16801
+(anonymous) @ mixpanel.module.js:16760
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5886)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+content.js:10 Uncaught Error: Extension context invalidated.
+    at o (content.js:10:5687)
+    at content.js:10:5598
+o @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+n @ content.js:10
+(anonymous) @ content.js:10
+setTimeout
+s @ content.js:10
