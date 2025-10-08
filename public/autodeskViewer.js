@@ -23,11 +23,11 @@ export async function loadViewer(container, urn, options = {}) {
             throw new Error(errorMsg);
         }
         tokenJson = await tokenResp.json();
-        
+
         if (!tokenJson || !tokenJson.access_token) {
             throw new Error('Invalid token response - missing access_token');
         }
-        
+
         console.log('Viewer token obtained successfully, expires in:', tokenJson.expires_in, 'seconds');
     } catch (e) {
         console.error('Failed to obtain viewer token:', e);

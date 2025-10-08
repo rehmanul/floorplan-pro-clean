@@ -527,13 +527,33 @@ function showNotification(message, type) {
 }
 
 async function pollForAPSCompletion(urn) {
-    const maxAttempts = 20;
+    const maxAttempts = 30;
     let attempts = 0;
     showLoader('Waiting for APS translation...');
 
     while (attempts < maxAttempts) {
         try {
-            const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:3001';
+            const API = (window.__API_BASE__) ? window.__API_BASE__ : 'http://localhost:5000';
+            
+            // First check status endpoint
+            const statusResponse = await fetch(`${API}/api/jobs/${encodeURIComponent(urn)}/status`);
+            const statusData = await statusResponse.json();
+            
+            console.log(`Polling attempt ${attempts + 1}/${maxAttempts}, status:`, statusData.status);
+            
+            if (statusData.status === 'failed' || statusData.status === 'failed-translating') {
+                hideLoader();
+                showNotification('CAD file translation failed. Please check the file format.', 'error');
+                return;
+            }
+            
+            if (!statusData.ready) {
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                continue;
+            }
+            
+            // Now try analysis
             const analysisResponse = await fetch(`${API}/api/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
