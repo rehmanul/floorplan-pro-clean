@@ -575,8 +575,12 @@ app.post('/api/jobs', upload.single('file'), async (req, res) => {
             message: 'File uploaded to APS - translation started. Poll /api/jobs/:urn/status or wait for webhook.'
         });
 
-        // Clean up local file
-        fs.unlinkSync(file.path);
+        // Clean up local file after a small delay to avoid file system race
+        setTimeout(() => {
+            try {
+                if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+            } catch (e) { /* ignore cleanup errors */ }
+        }, 1000);
 
     } catch (error) {
         console.error('Upload error:', error);
@@ -1152,8 +1156,11 @@ app.get('/api/transforms/:urn/effective', async (req, res) => {
                     return res.json({ urn, transform: analysis.placementTransform, source: 'aps' });
                 }
             } catch (e) {
-                // APS may be still processing or fail; do not surface internal errors
-                console.warn('Effective transform: APS lookup failed for', urn, e.message || e);
+                // APS may be still processing (400 = not ready, 404 = not found)
+                // Do not log as warning unless it's an unexpected error
+                if (e.message !== 'APS_NOT_READY' && !e.message.includes('400')) {
+                    console.warn('Effective transform: APS lookup failed for', urn, e.message || e);
+                }
             }
         }
 
