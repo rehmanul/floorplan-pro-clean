@@ -40,7 +40,8 @@ body {
     -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
     transition: all .3s ease;
-    max-height: 100vh;
+    max-height: calc(100vh - 20px);
+    height: 100%;
 }
 
 .panel.collapsed {
