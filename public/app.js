@@ -174,6 +174,43 @@ document.addEventListener('DOMContentLoaded', function () {
     const exportImageBtn = document.getElementById('exportImageBtn');
     if (exportImageBtn) exportImageBtn.onclick = exportToImage;
 
+    // Viewer controls
+    const resetCameraBtn = document.getElementById('resetCameraBtn');
+    if (resetCameraBtn) {
+        resetCameraBtn.addEventListener('click', () => {
+            if (currentRenderer && currentRenderer.camera && currentRenderer.controls) {
+                currentRenderer.camera.position.set(0, 1500, 0);
+                currentRenderer.camera.lookAt(0, 0, 0);
+                currentRenderer.controls.reset();
+                showNotification('Camera reset', 'info');
+            }
+        });
+    }
+
+    const wireframeToggleBtn = document.getElementById('wireframeToggleBtn');
+    if (wireframeToggleBtn) {
+        wireframeToggleBtn.addEventListener('click', () => {
+            if (currentRenderer && currentRenderer.scene) {
+                currentRenderer.scene.traverse((obj) => {
+                    if (obj.material) {
+                        obj.material.wireframe = !obj.material.wireframe;
+                    }
+                });
+                showNotification('Wireframe toggled', 'info');
+            }
+        });
+    }
+
+    const gridToggleBtn = document.getElementById('gridToggleBtn');
+    if (gridToggleBtn) {
+        gridToggleBtn.addEventListener('click', () => {
+            if (currentRenderer && currentRenderer.gridHelper) {
+                currentRenderer.gridHelper.visible = !currentRenderer.gridHelper.visible;
+                showNotification('Grid toggled', 'info');
+            }
+        });
+    }
+
     // Optimization buttons (may be noop if backend doesn't expose these endpoints)
     const optimizeLayoutBtn = document.getElementById('optimizeLayoutBtn');
     const optimizePathsBtn = document.getElementById('optimizePathsBtn');

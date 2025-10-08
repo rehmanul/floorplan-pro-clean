@@ -131,6 +131,17 @@
                 <i class="fas fa-image"></i> Export Image
             </button>
 
+            <h4>Viewer Controls</h4>
+            <button id="resetCameraBtn" class="btn">
+                <i class="fas fa-video"></i> Reset Camera
+            </button>
+            <button id="wireframeToggleBtn" class="btn">
+                <i class="fas fa-grip-lines"></i> Toggle Wireframe
+            </button>
+            <button id="gridToggleBtn" class="btn">
+                <i class="fas fa-border-all"></i> Toggle Grid
+            </button>
+
             <h4>Configuration</h4>
             <label for="corridorWidthSlider">Corridor Width (m):</label>
             <input type="range" id="corridorWidthSlider" class="corridor-slider" min="1" max="3" step="0.1" value="1.5"
@@ -170,6 +181,22 @@
 
         <div class="panel">
             <h3><i class="fas fa-chart-bar"></i> Analysis Results</h3>
+
+            <h4>Autodesk Features</h4>
+            <div class="feature-info">
+                <small>✓ Model Derivative Translation</small><br>
+                <small>✓ SVF/F2D Rendering</small><br>
+                <small>✓ Custom Transform Support</small><br>
+                <small>✓ Metadata Extraction</small>
+            </div>
+
+            <h4>Three.js Features</h4>
+            <div class="feature-info">
+                <small>✓ WebGL Rendering</small><br>
+                <small>✓ Orbit Controls</small><br>
+                <small>✓ Post-processing Effects</small><br>
+                <small>✓ Custom Geometry</small>
+            </div>
 
             <h4>Detected Rooms</h4>
             <div id="roomList">

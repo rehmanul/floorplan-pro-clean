@@ -30,11 +30,11 @@ export class ThreeRenderer {
             // Test if WebGL is available before creating renderer
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            
+
             if (!gl) {
                 throw new Error('WebGL not supported');
             }
-            
+
             this.renderer = new THREE.WebGLRenderer({
                 antialias: true,
                 preserveDrawingBuffer: true,
@@ -55,25 +55,25 @@ export class ThreeRenderer {
             canvas2d.style.display = 'block';
             canvas2d.style.background = '#f0f0f0';
             container.appendChild(canvas2d);
-            
+
             this.canvas2d = canvas2d;
             this.ctx2d = canvas2d.getContext('2d');
             this.useWebGL = false;
             this.use2DFallback = true;
-            
+
             // Skip the rest of Three.js initialization
             console.log('2D Canvas fallback active');
             return;
         }
-        
+
         this.renderer.setSize(this.width, this.height);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        
+
         if (this.useWebGL) {
             this.renderer.shadowMap.enabled = true;
             this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         }
-        
+
         this.renderer.outputColorSpace = THREE.SRGBColorSpace;
         // Ensure canvas fills the container and remains responsive
         this.renderer.domElement.style.width = '100%';
@@ -136,6 +136,11 @@ export class ThreeRenderer {
 
         // LOD system
         this.lodObjects = [];
+
+        // Grid helper
+        this.gridHelper = new THREE.GridHelper(10000, 100, 0x888888, 0xcccccc);
+        this.gridHelper.position.y = -1;
+        this.scene.add(this.gridHelper);
 
         // Interaction system
         this.raycaster = new THREE.Raycaster();
@@ -618,15 +623,15 @@ export class ThreeRenderer {
     render2DFloorPlan(floorPlan, ilots, corridors) {
         const ctx = this.ctx2d;
         const canvas = this.canvas2d;
-        
+
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
+
         // Calculate scale and offset to fit floor plan
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-        
+
         if (floorPlan.walls) {
             floorPlan.walls.forEach(wall => {
                 if (wall.start) {
@@ -643,17 +648,17 @@ export class ThreeRenderer {
                 }
             });
         }
-        
+
         const width = maxX - minX || 100;
         const height = maxY - minY || 100;
         const scale = Math.min(canvas.width / width, canvas.height / height) * 0.9;
         const offsetX = (canvas.width - width * scale) / 2 - minX * scale;
         const offsetY = (canvas.height - height * scale) / 2 - minY * scale;
-        
+
         // Helper to transform coordinates
         const tx = (x) => x * scale + offsetX;
         const ty = (y) => canvas.height - (y * scale + offsetY); // Flip Y axis
-        
+
         // Draw walls
         if (floorPlan.walls) {
             ctx.strokeStyle = '#000000';
@@ -667,7 +672,7 @@ export class ThreeRenderer {
             });
             ctx.stroke();
         }
-        
+
         // Draw forbidden zones (blue)
         if (floorPlan.forbiddenZones) {
             ctx.strokeStyle = '#0000ff';
@@ -681,7 +686,7 @@ export class ThreeRenderer {
             });
             ctx.stroke();
         }
-        
+
         // Draw entrances (red)
         if (floorPlan.entrances) {
             ctx.strokeStyle = '#ff0000';
@@ -695,7 +700,7 @@ export class ThreeRenderer {
             });
             ctx.stroke();
         }
-        
+
         // Draw ilots (green boxes)
         if (ilots && ilots.length > 0) {
             ctx.fillStyle = 'rgba(0, 255, 0, 0.5)';
@@ -714,7 +719,7 @@ export class ThreeRenderer {
                 }
             });
         }
-        
+
         // Draw corridors (gray)
         if (corridors && corridors.length > 0) {
             ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
@@ -733,7 +738,7 @@ export class ThreeRenderer {
                 }
             });
         }
-        
+
         // Add label
         ctx.fillStyle = '#333';
         ctx.font = '14px Arial';
@@ -745,7 +750,7 @@ export class ThreeRenderer {
         if (this.use2DFallback) {
             return;
         }
-        
+
         try {
             requestAnimationFrame(() => this.animate());
 
