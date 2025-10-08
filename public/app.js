@@ -92,32 +92,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 showNotification('Viewer initialization failed', 'error');
             }
         });
-
-        // Transform debug button (opens small debug panel when viewer is active)
-        const transformDebugBtn = document.getElementById('transformDebugBtn');
-        if (transformDebugBtn) {
-            transformDebugBtn.addEventListener('click', async () => {
-                if (!viewerHandle) {
-                    const urn = currentFloorPlan?.urn || '';
-                    if (!urn) { showNotification('No document loaded for Viewer', 'warning'); return; }
-                    try { viewerHandle = await loadViewer(viewerContainer, urn, { autoApplyTransform: true }); }
-                    catch (e) { showNotification('Viewer not available', 'error'); return; }
-                }
-                try {
-                    // lazy import of debug renderer function
-                    const mod = await import('./autodeskViewer.js');
-                    const urn = currentFloorPlan?.urn || '';
-                    mod.renderTransformDebugPanel(viewerContainer, urn, viewerHandle, {
-                        onApply: (m) => {
-                            // reproject overlays when transform applied
-                            overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
-                        }
-                    });
-                } catch (e) {
-                    console.error('Failed to open transform debug panel', e);
-                }
-            });
-        }
     }
 
     // Sidebar toggle buttons
