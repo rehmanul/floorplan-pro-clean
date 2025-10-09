@@ -310,6 +310,7 @@ export class ThreeRenderer {
     }
 
     renderFloorPlan(floorPlan, ilots, corridors) {
+        // ENHANCED: Robust rendering with fallback and validation
         // Defensive: if no floorPlan provided, clear scene and return
         if (!floorPlan) {
             this.clear();
