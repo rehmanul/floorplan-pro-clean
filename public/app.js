@@ -70,13 +70,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 viewerHandle = null;
             }
             // re-init ThreeRenderer if needed
-            if (!currentRenderer) currentRenderer = new ThreeRenderer(viewerContainer);
+            const container = document.getElementById('threeContainer');
+            if (!currentRenderer) currentRenderer = new ThreeRenderer(container);
             currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
         });
 
         useViewerBtn.addEventListener('click', async () => {
             rendererType = 'viewer';
             try {
+                const container = document.getElementById('threeContainer');
                 if (!viewerHandle) {
                     // Prefer URN from currentFloorPlan, then auto URN from query param
                     const urn = currentFloorPlan?.urn || window.__AUTO_URN__ || '';
@@ -84,10 +86,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         showNotification('No document loaded for Autodesk Viewer — upload a CAD file or provide ?urn=<urn>', 'warning');
                         return;
                     }
-                    viewerHandle = await loadViewer(viewerContainer, urn, { autoApplyTransform: true });
+                    viewerHandle = await loadViewer(container, urn, { autoApplyTransform: true });
                 }
                 // overlay existing ilots/corridors, passing viewer handle for projection
-                overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
+                overlayShapes(container, generatedIlots, corridorNetwork, viewerHandle);
             } catch (e) {
                 console.error('Failed to initialize Autodesk Viewer:', e);
                 showNotification('Viewer initialization failed', 'error');
@@ -311,10 +313,11 @@ async function handleFileUpload(e) {
         // Load the floor plan in the Autodesk Viewer
         rendererType = 'viewer';
         try {
+            const container = document.getElementById('threeContainer');
             if (!viewerHandle) {
-                viewerHandle = await loadViewer(viewerContainer, currentFloorPlan.urn, { autoApplyTransform: true });
+                viewerHandle = await loadViewer(container, currentFloorPlan.urn, { autoApplyTransform: true });
             }
-            overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
+            overlayShapes(container, generatedIlots, corridorNetwork, viewerHandle);
         } catch (e) {
             console.error('Failed to initialize Autodesk Viewer:', e);
             showNotification('Viewer initialization failed: ' + e.message, 'error');
