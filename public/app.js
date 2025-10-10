@@ -7,7 +7,7 @@ let currentFloorPlan = null;
 let generatedIlots = [];
 let corridorNetwork = [];
 let currentRenderer = null;
-let rendererType = 'three'; // Default renderer
+let rendererType = 'viewer'; // Default renderer
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('FloorPlan Pro Clean - System Ready');
@@ -306,6 +306,19 @@ async function handleFileUpload(e) {
         document.getElementById('totalArea').textContent = `${currentFloorPlan.totalArea} m²`;
 
         if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+
+        // Load the floor plan in the Autodesk Viewer
+        rendererType = 'viewer';
+        try {
+            if (!viewerHandle) {
+                viewerHandle = await loadViewer(viewerContainer, currentFloorPlan.urn, { autoApplyTransform: true });
+            }
+            overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
+        } catch (e) {
+            console.error('Failed to initialize Autodesk Viewer:', e);
+            showNotification('Viewer initialization failed', 'error');
+        }
+
         hideLoader();
         showNotification(`File processed successfully!`, 'success');
 
@@ -413,6 +426,7 @@ async function generateIlots() {
                 console.log(`Generated ${generatedIlots.length} ilots with total area: ${data.totalArea?.toFixed(2) || 0} m²`);
 
                 updateStats();
+                rendererType = 'three';
                 renderCurrentState();
 
                 showNotification(`Generated ${generatedIlots.length} îlots`, 'success');
@@ -463,6 +477,7 @@ async function generateCorridors() {
         corridorNetwork = result.corridors || [];
 
         updateStats();
+        rendererType = 'three';
         renderCurrentState();
 
         showNotification(`Generated ${corridorNetwork.length} corridors successfully!`, 'success');
