@@ -306,6 +306,19 @@ async function handleFileUpload(e) {
         document.getElementById('totalArea').textContent = `${currentFloorPlan.totalArea} m²`;
 
         if (currentRenderer) currentRenderer.renderFloorPlan(currentFloorPlan, generatedIlots, corridorNetwork);
+
+        // Load the floor plan in the Autodesk Viewer
+        rendererType = 'viewer';
+        try {
+            if (!viewerHandle) {
+                viewerHandle = await loadViewer(viewerContainer, currentFloorPlan.urn, { autoApplyTransform: true });
+            }
+            overlayShapes(viewerContainer, generatedIlots, corridorNetwork, viewerHandle);
+        } catch (e) {
+            console.error('Failed to initialize Autodesk Viewer:', e);
+            showNotification('Viewer initialization failed', 'error');
+        }
+
         hideLoader();
         showNotification(`File processed successfully!`, 'success');
 
