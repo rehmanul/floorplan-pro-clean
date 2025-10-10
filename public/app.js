@@ -413,6 +413,7 @@ async function generateIlots() {
                 console.log(`Generated ${generatedIlots.length} ilots with total area: ${data.totalArea?.toFixed(2) || 0} m²`);
 
                 updateStats();
+                rendererType = 'three';
                 renderCurrentState();
 
                 showNotification(`Generated ${generatedIlots.length} îlots`, 'success');
@@ -463,6 +464,7 @@ async function generateCorridors() {
         corridorNetwork = result.corridors || [];
 
         updateStats();
+        rendererType = 'three';
         renderCurrentState();
 
         showNotification(`Generated ${corridorNetwork.length} corridors successfully!`, 'success');
