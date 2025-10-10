@@ -8,6 +8,7 @@ let generatedIlots = [];
 let corridorNetwork = [];
 let currentRenderer = null;
 let rendererType = 'viewer'; // Default renderer
+let viewerHandle = null;
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('FloorPlan Pro Clean - System Ready');
@@ -56,7 +57,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Viewer toggle buttons
     const useThreeBtn = document.getElementById('useThreeBtn');
     const useViewerBtn = document.getElementById('useViewerBtn');
-    let viewerHandle = null;
     let viewerContainer = document.getElementById('threeContainer');
     // expose viewerHandle to window so overlay functions can access it reliably
     Object.defineProperty(window, '__viewerHandle', { configurable: true, enumerable: false, writable: true, value: viewerHandle });
