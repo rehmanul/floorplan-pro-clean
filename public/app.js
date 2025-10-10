@@ -7,7 +7,7 @@ let currentFloorPlan = null;
 let generatedIlots = [];
 let corridorNetwork = [];
 let currentRenderer = null;
-let rendererType = 'three'; // Default renderer
+let rendererType = 'viewer'; // Default renderer
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('FloorPlan Pro Clean - System Ready');
